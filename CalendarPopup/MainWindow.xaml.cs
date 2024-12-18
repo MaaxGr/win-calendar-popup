@@ -227,6 +227,8 @@ public partial class MainWindow : Window
     private void RenderDays(Grid grid, DateTime targetMonth)
     {
         var startDate = GetFirstMondayOrLastInPreviousMonth(targetMonth.Year, targetMonth.Month);
+        
+        Console.WriteLine("First monday is " + startDate);
 
         // Use LINQ to find elements at the specified position
         var elementsToRemove = grid.Children
@@ -257,8 +259,6 @@ public partial class MainWindow : Window
 
             for (int j = 0; j < 7; j++)
             {
-                startDate = startDate.AddDays(1);
-
                 var color = targetMonth.Month == startDate.Month ? Colors.Azure : Colors.Gray;
 
                 if (startDate == DateTime.Today)
@@ -275,6 +275,8 @@ public partial class MainWindow : Window
                 Grid.SetRow(textBlock, 3 + i);
                 Grid.SetColumn(textBlock, 1 + j);
                 grid.Children.Add(textBlock);
+                
+                startDate = startDate.AddDays(1);
             }
         }
     }
@@ -493,27 +495,28 @@ public partial class MainWindow : Window
 
     private int GetCalendarWeek(DateTime date)
     {
-        // Use ISO 8601 week numbering
-        CultureInfo ci = CultureInfo.CurrentCulture;
-        return ci.Calendar.GetWeekOfYear(date, CalendarWeekRule.FirstFourDayWeek, DayOfWeek.Monday);
+        return ISOWeek.GetWeekOfYear(date);
     }
 
     static DateTime GetFirstMondayOrLastInPreviousMonth(int year, int month)
     {
         // First day of the specified month
-        DateTime firstDayOfMonth = new DateTime(year, month, 1);
+        var firstDayOfMonth = new DateTime(year, month, 1);
 
         // If the 1st is Monday, return it
         if (firstDayOfMonth.DayOfWeek == DayOfWeek.Monday)
             return firstDayOfMonth;
 
         // Otherwise, find the last Monday of the previous month
-        DateTime lastDayOfPreviousMonth = firstDayOfMonth.AddDays(-1); // Last day of November
-        int daysToSubtract = (int)lastDayOfPreviousMonth.DayOfWeek - (int)DayOfWeek.Monday;
-        if (daysToSubtract < 0)
-            daysToSubtract += 7; // Adjust if the last day is before Monday
+        
+        while (true)
+        {
+            firstDayOfMonth = firstDayOfMonth.AddDays(-1);
+            if (firstDayOfMonth.DayOfWeek == DayOfWeek.Monday)
+                break;
+            
+        }
 
-        DateTime lastMonday = lastDayOfPreviousMonth.AddDays(-daysToSubtract);
-        return lastMonday;
+        return firstDayOfMonth;
     }
 }
