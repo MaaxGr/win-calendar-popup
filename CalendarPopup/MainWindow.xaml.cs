@@ -20,7 +20,10 @@ using HorizontalAlignment = System.Windows.HorizontalAlignment;
 using MessageBox = System.Windows.MessageBox;
 using Orientation = System.Windows.Controls.Orientation;
 using TextBox = System.Windows.Controls.TextBox;
-
+using System;
+using System.Drawing;
+using System.Globalization;
+using System.Windows.Forms;
 
 namespace CalendarPopup;
 
@@ -33,11 +36,16 @@ public partial class MainWindow : Window
     private MainViewModel viewModel;
     private bool isCalendarVisible = false;
     private DateTime? hiddenAt = null;
+    private int _lastWeek = -1;
+    private System.Windows.Forms.Timer _timer;
+    
+    
     
     public MainWindow()
     {
         InitializeComponent();
         InitializeNotifyIcon();
+        StartIconUpdater();
         this.Hide(); // Hide the window initially
 
         viewModel = new MainViewModel();
@@ -80,6 +88,27 @@ public partial class MainWindow : Window
         this.Content = vStack;
     }
 
+    private void StartIconUpdater()
+    {
+        _timer = new System.Windows.Forms.Timer();
+        _timer.Interval = 60 * 60 * 1000; // every hour
+
+        _timer.Tick += (s, e) =>
+        {
+            int currentWeek = System.Globalization.ISOWeek.GetWeekOfYear(DateTime.Now);
+
+            if (currentWeek != _lastWeek)
+            {
+                _lastWeek = currentWeek;
+
+                notifyIcon.Icon = CreateWeekIcon(currentWeek);
+                notifyIcon.Text = $"Calendar Week {currentWeek}";
+            }
+        };
+
+        _timer.Start();
+    }
+    
     public Grid CalendarDetailGrid()
     {
         var grid = new Grid
@@ -284,9 +313,10 @@ public partial class MainWindow : Window
 
     private void InitializeNotifyIcon()
     {
+        DateTime now = DateTime.Now;
         notifyIcon = new NotifyIcon
         {
-            Icon = new System.Drawing.Icon("calendar-icon_34471.ico"), // Use your .ico file here
+            Icon = CreateWeekIcon(int.Parse(GetCalendarWeek(new DateTime(now.Year, now.Month, now.Day)).ToString())),
             Text = "Calendar App",
             Visible = true
         };
@@ -318,6 +348,47 @@ public partial class MainWindow : Window
         };
     }
 
+    
+    private System.Drawing.Icon CreateWeekIcon(int week)
+    {
+        var bmp = new System.Drawing.Bitmap(32, 32);
+
+        using (var g = System.Drawing.Graphics.FromImage(bmp))
+        {
+            g.Clear(System.Drawing.Color.Black);
+
+            // optional: sharper text
+            g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
+
+            using (var brush = new System.Drawing.SolidBrush(System.Drawing.Color.White))
+            {
+                string text = week.ToString();
+
+                // Adjust font size depending on digits
+                float fontSize = text.Length == 1 ? 26 : 25;
+
+                using (var font = new System.Drawing.Font(
+                           "Arial",
+                           fontSize,
+                           System.Drawing.FontStyle.Bold,
+                           System.Drawing.GraphicsUnit.Pixel))
+                {
+                    var size = g.MeasureString(text, font);
+
+                    float x = (bmp.Width - size.Width) / 2;
+                    float y = (bmp.Height - size.Height) / 2;
+
+                    g.DrawString(text, font, brush, x, y);
+                }
+            }
+        }
+
+        // safer version (prevents handle leaks)
+        var hIcon = bmp.GetHicon();
+        var icon = System.Drawing.Icon.FromHandle(hIcon);
+        return (System.Drawing.Icon)icon.Clone();
+    }    
+    
     private Border CustomButtonTest(string text, Action action)
     {
         // Create a Border to hold the TextBlock

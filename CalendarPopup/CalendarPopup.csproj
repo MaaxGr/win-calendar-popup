@@ -2,7 +2,7 @@
 
     <PropertyGroup>
         <OutputType>WinExe</OutputType>
-        <TargetFramework>net9.0-windows</TargetFramework>
+        <TargetFramework>net10.0-windows</TargetFramework>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
         <UseWPF>true</UseWPF>
@@ -11,7 +11,8 @@
     </PropertyGroup>
     <ItemGroup>
         <!-- Use NuGet for compatibility -->
-        <PackageReference Include="Microsoft.Windows.Compatibility" Version="9.0.0" />
+        <PackageReference Include="Microsoft.Windows.Compatibility" Version="10.0.5" />
+        <PackageReference Include="System.Drawing.Common" Version="10.0.5" />
         <Reference Include="System.Windows.Forms" />
     </ItemGroup>
     <ItemGroup>
