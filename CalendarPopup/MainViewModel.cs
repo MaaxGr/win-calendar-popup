@@ -27,6 +27,16 @@ public class MainViewModel : INotifyPropertyChanged
         {
             _selectedMonth = value;
             OnPropertyChanged();
+            OnPropertyChanged(nameof(IsCurrentMonth));
+        }
+    }
+
+    public bool IsCurrentMonth
+    {
+        get
+        {
+            var now = DateTime.Now;
+            return _selectedMonth.Month == now.Month && _selectedMonth.Year == now.Year;
         }
     }
 
@@ -38,6 +48,11 @@ public class MainViewModel : INotifyPropertyChanged
     public void GoForwardOneMonth()
     {
         SelectedMonth = SelectedMonth.AddMonths(1);
+    }
+
+    public void ResetToToday()
+    {
+        SelectedMonth = DateTime.Now;
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;

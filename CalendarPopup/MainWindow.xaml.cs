@@ -78,12 +78,37 @@ public partial class MainWindow : Window
         button1.SetBinding(TextBlock.TextProperty, binding);
         Grid.SetColumn(button1, 0);
         headerGrid.Children.Add(button1);
+        
+        var todayButton = CustomButtonTest("Today", () => { viewModel.ResetToToday(); });
+        todayButton.HorizontalAlignment = HorizontalAlignment.Right;
+        todayButton.VerticalAlignment = VerticalAlignment.Center;
+        todayButton.Margin = new Thickness(0, 0, 10, 0);
+        Grid.SetColumn(todayButton, 1);
+        
+        var visibilityBinding = new Binding("IsCurrentMonth")
+        {
+            Converter = new InvertedBooleanToVisibilityConverter()
+        };
+        todayButton.SetBinding(UIElement.VisibilityProperty, visibilityBinding);
+        headerGrid.Children.Add(todayButton);
 
         var calendarArea = CalendarDetailGrid();
         Grid.SetRow(headerGrid, 0);
         vStack.Children.Add(headerGrid);
         Grid.SetRow(calendarArea, 1);
         vStack.Children.Add(calendarArea);
+
+        vStack.MouseWheel += (s, e) =>
+        {
+            if (e.Delta > 0)
+            {
+                viewModel.GoBackOneMonth();
+            }
+            else if (e.Delta < 0)
+            {
+                viewModel.GoForwardOneMonth();
+            }
+        };
 
         this.Content = vStack;
     }
